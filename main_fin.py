@@ -48,6 +48,7 @@ def add_user(req: Request, image: UploadFile = File(...), user_name: str = Form(
 
     new_user = models.User(user_name=user_name, user_image="static/image/" + user_name + ".jpg")
     db.add(new_user)
+
     db.commit()
     url = app.url_path_for("home")
     return RedirectResponse(url=url, status_code=status.HTTP_303_SEE_OTHER)
@@ -55,6 +56,7 @@ def add_user(req: Request, image: UploadFile = File(...), user_name: str = Form(
 @app.get("/delete/{user_id}")
 def add(req: Request, user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    os.remove(user.user_image)
     db.delete(user)
     db.commit()
     url = app.url_path_for("home")

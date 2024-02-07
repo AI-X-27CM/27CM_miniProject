@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <title>User App - FastAPI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+</head>
+<body>
+    <div style="margin-top: 50px;" class="ui container">
+        <h1 class="ui center aligned header">Mini project</h1>
+        <form action="/search">
+            <div class="ui secondary pointing menu">
+                <a class="item" href="/">
+                  Home
+                </a>
+                <a class="active item" href="testify">
+                  Search
+                </a>
+              </div>
+              <div class="ui segment">
+                <p></p>
+              </div>
+        </form>
+        <div class="ui segment">
+            <p class="ui big header">
+                
+                <div class="ui small image">
+                    <img src="{{user.user_image}}">
+                </div>
+                {{ user.user_id }} | {{ user.user_name }}
+            </p>
+            <a class="ui red button" href="/delete/{{ user.user_id }}">Delete</a>
+        </div>
+<video id="video" width="320" height="240" autoplay></video>
+<canvas id="canvas" width="320" height="240"></canvas>
+<button type="button" id="webcamBtn">캡쳐하기</button>
+<button type="button" id="saveBtn">저장하기</button>
+<button type="button" id="verifyBtn">검증하기</button>
+<form><input id="name" type="text"></form>
+<script>
+if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+	navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+		var video = document.getElementById('video');
+		video.srcObject = stream;
+		video.play();
+	});
+}
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
+var video = document.getElementById('video');
+
+document.getElementById("saveBtn").addEventListener("click",function() {
+	var canvas = document.getElementById('canvas');
+    var imageDataURL = canvas.toDataURL("image/jpg");
+    var downloadLink = document.createElement('a');
+    var fileName = document.getElementById('name').value + ".jpg";
+    downloadLink.href = imageDataURL;
+    downloadLink.download = fileName;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+})
+
+document.getElementById("webcamBtn").addEventListener("click",function() {
+	context.drawImage(video,0,0,320,240);
+});
+
+document.getElementById("verifyBtn").addEventListener("click", async function () {
+            var canvas = document.getElementById('canvas');
+            var imageDataURL = canvas.toDataURL("image/jpg");
+            var fileName = document.getElementById('name').value + ".jpg";
+            var blob = await fetch(imageDataURL).then(res => res.blob());
+
+            var formData = new FormData();
+            formData.append("image", new File([blob], fileName, { type: "image/jpg" }));
+
+            try {
+                const response = await fetch('/verify_image/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                alert(result.result);
+            } catch (error) {
+                console.error('Error during verification:', error);
+            }
+        });
+ 
+</script>
+</body>
+</html>

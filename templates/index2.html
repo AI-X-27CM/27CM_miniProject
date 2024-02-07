@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Image and Name</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 80%;
+            margin: 0 auto;
+        }
+        .image-container {
+            flex: 1;
+            text-align: center;
+        }
+        .image-container img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .name-container {
+            flex: 1;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .name-container h2 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<!-- file input -->
+<form action="/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*">
+    <input type="submit" value="Upload Image">
+</form>
+
+<!-- file input -->
+<div class="container">
+    <div class="image-container">
+        <img src="path_to_your_image.jpg" alt="Image">
+    </div>
+    <div class="name-container">
+        <h2>사용자 이름</h2>
+        <p>여기에 사용자의 이름 데이터를 표시하세요.</p>
+    </div>
+</div>
+
+</body>
+</html>

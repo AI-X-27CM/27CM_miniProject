@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User App - FastAPI</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
 </head>
 <body>
     <div style="margin-top: 50px;" class="ui container">
@@ -18,10 +18,12 @@
                 <a class="item" href="testify">
                   Search
                 </a>
-              </div>
+                <a class="item" href="detect">
+                    detect
+                </a>
+            </div>
               <br/>
         </form>
-
         <form enctype="multipart/form-data" class="ui form" action="/add" method="post">
             <div class="field">
                 <label>User list</label>
@@ -30,13 +32,10 @@
             </div>
             <button class="ui blue button" type="submit">Add</button>
         </form>
-
         <hr>
-
-        {% for user in users %} 
+        {% for user in users %}
         <div class="ui segment">
             <p class="ui big header">
-                
                 <div class="ui small image">
                     <img src="{{user.user_image}}">
                 </div>
@@ -48,4 +47,3 @@
     </div>
 </body>
 </html>
-

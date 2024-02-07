@@ -55,7 +55,6 @@ def add_user(req: Request, image: UploadFile = File(...), user_name: str = Form(
 
 @app.get("/delete/{user_id}")
 def add(req: Request, user_id: int, db: Session = Depends(get_db)):
-    # os.remove(models.User.userid)
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     os.remove(user.user_image)
     db.delete(user)

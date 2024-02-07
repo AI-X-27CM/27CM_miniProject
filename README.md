@@ -1,6 +1,7 @@
 # 27CM_miniProject
 
 1. 새로운 본인의 branch를 만드세요
+   - 명령어 git branch {새로운_브랜치_이름}
 
 2. 모든 파일은 뒤에 {파일명}_KSH 이런식으로 만드세요
 

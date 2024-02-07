@@ -1,5 +1,7 @@
+from asyncio import locks
+from anyio import Lock
 import face_recognition
-from fastapi import FastAPI, Form, Request, Depends,status, UploadFile, File
+from fastapi import FastAPI, Form, Request, Depends, WebSocket, WebSocketDisconnect, logger,status, UploadFile, File
 import cv2
 from fastapi.staticfiles import StaticFiles
 import numpy as np
@@ -65,6 +67,11 @@ def add(req: Request, user_id: int, db: Session = Depends(get_db)):
 def compare_faces(known_face_encodings, face_encoding_to_check, tolerance=0.25): ## 추가
     return list(face_recognition.face_distance(known_face_encodings, face_encoding_to_check) <= tolerance)
 
+
+
+
+
+
 @app.get("/testify") ## 추가
 async def testify(req: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("testify.html", { "request": req})
@@ -98,3 +105,96 @@ async def verify_image(image: UploadFile = File(...)):
             return JSONResponse(content={"result": "Not PASS"})
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+
+
+
+
+known_face_encodings = []
+known_face_names = []
+
+def load_known_faces(folder_path):
+    user_info_list = []
+    for file_name in os.listdir(folder_path):
+        if file_name.endswith(".jpg"):
+            user_name = os.path.splitext(file_name)[0]
+            user_info_list.append((user_name, file_name))
+
+    for user_name, file_name in user_info_list:
+        image_path = os.path.join(folder_path, file_name)
+        # 이미지 파일을 불러와서 얼굴 인코딩 수행
+        image = face_recognition.load_image_file(image_path)
+        face_encoding = face_recognition.face_encodings(image)[0]
+        # 사용자 이름과 얼굴 인코딩을 각 리스트에 추가
+        known_face_names.append(user_name)
+        known_face_encodings.append(face_encoding)
+
+    print(f"Loaded known faces: {user_info_list}")
+    print(f"Known face names: {known_face_names}")
+
+    return user_info_list
+
+@app.on_event("startup")
+def startup_event():
+    folder_path = UPLOAD_DIRECTORY
+    user_info_list = load_known_faces(folder_path)
+
+
+
+
+
+
+
+
+@app.get("/detect")
+async def read_root(request: Request):
+    return templates.TemplateResponse("detect.html", {"request": request})
+
+async def websocket_handler(websocket: WebSocket):
+    await websocket.accept()
+    video_capture = cv2.VideoCapture(0)
+
+    try:
+        while True:
+            ret, frame = video_capture.read()
+            small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+            rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
+            
+            face_locations = face_recognition.face_locations(rgb_small_frame)
+            face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+
+            face_names = []
+            for face_encoding in face_encodings:
+                # Initialize variables for comparison
+                name = "denied"
+                min_distance = 0.5  # Set a threshold for face distance
+
+                # Compare face encoding with known faces
+                for known_encoding, known_name in zip(known_face_encodings, known_face_names):
+                    face_distance = face_recognition.face_distance([known_encoding], face_encoding)[0]
+                    if face_distance < min_distance:
+                        min_distance = face_distance
+                        name = "access"
+
+                face_names.append(name)
+
+            for (top, right, bottom, left), name in zip(face_locations, face_names):
+                if name == "access":
+                    cv2.rectangle(frame, (left * 4, top * 4), (right * 4, bottom * 4), (0, 255, 0), 2)
+                else:
+                    cv2.rectangle(frame, (left * 4, top * 4), (right * 4, bottom * 4), (0, 0, 255), 2)
+                font = cv2.FONT_HERSHEY_DUPLEX
+                cv2.putText(frame, name, (left * 4 + 6, bottom * 4 - 6), font, 1.0, (255, 255, 255), 1)
+
+            _, jpeg = cv2.imencode('.jpg', frame)
+            await websocket.send_bytes(jpeg.tobytes())
+
+    except WebSocketDisconnect:
+        pass
+    finally:
+        video_capture.release()
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket_handler(websocket)
+    

@@ -26,16 +26,12 @@
         </form>
         <div class="ui segment">
             <p class="ui big header">
-                
                 <div class="ui small image">
-                    <img src="{{user.user_image}}">
+                    <video id="video" width="320" height="240" autoplay></video>
                 </div>
-                {{ user.user_id }} | {{ user.user_name }}
             </p>
-            <a class="ui red button" href="/delete/{{ user.user_id }}">Delete</a>
         </div>
-<video id="video" width="320" height="240" autoplay></video>
-<canvas id="canvas" width="320" height="240"></canvas>
+        <canvas id="canvas" width="320" height="240"></canvas>
 <button type="button" id="webcamBtn">캡쳐하기</button>
 <button type="button" id="saveBtn">저장하기</button>
 <button type="button" id="verifyBtn">검증하기</button>

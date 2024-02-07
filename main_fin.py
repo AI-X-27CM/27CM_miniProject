@@ -67,7 +67,7 @@ def compare_faces(known_face_encodings, face_encoding_to_check, tolerance=0.25):
 
 @app.get("/testify") ## 추가
 async def testify(req: Request, db: Session = Depends(get_db)):
-    return templates.TemplateResponse("testify_test.html", { "request": req})
+    return templates.TemplateResponse("testify.html", { "request": req})
 
 @app.post("/verify_image/") #추가
 async def verify_image(image: UploadFile = File(...)):

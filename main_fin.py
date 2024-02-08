@@ -81,7 +81,6 @@ async def verify_image(image: UploadFile = File(...)):
     db = SessionLocal()
     all_images = db.query(models.User).all()
     file_list = [user.user_image for user in all_images]
-    print(file_list)
 
     try:
         # 클라이언트에서 전송한 이미지의 얼굴 인코딩 계산
@@ -110,40 +109,34 @@ async def verify_image(image: UploadFile = File(...)):
 
 
 
-known_face_encodings = []
-known_face_names = []
 
-def load_known_faces(folder_path):
-    user_info_list = []
-    for file_name in os.listdir(folder_path):
-        if file_name.endswith(".jpg"):
-            user_name = os.path.splitext(file_name)[0]
-            user_info_list.append((user_name, file_name))
+# known_face_names = []
 
-    for user_name, file_name in user_info_list:
-        image_path = os.path.join(folder_path, file_name)
-        # 이미지 파일을 불러와서 얼굴 인코딩 수행
-        image = face_recognition.load_image_file(image_path)
-        face_encoding = face_recognition.face_encodings(image)[0]
+# def load_known_faces(folder_path):
+#     user_info_list = []
+#     for file_name in os.listdir(folder_path):
+#         if file_name.endswith(".jpg"):
+#             user_name = os.path.splitext(file_name)[0]
+#             user_info_list.append((user_name, file_name))
+
+#     for user_name, file_name in user_info_list:
+#         image_path = os.path.join(folder_path, file_name)
+#         # 이미지 파일을 불러와서 얼굴 인코딩 수행
+#         image = face_recognition.load_image_file(image_path)
+#         face_encoding = face_recognition.face_encodings(image)[0]
         # 사용자 이름과 얼굴 인코딩을 각 리스트에 추가
-        known_face_names.append(user_name)
-        known_face_encodings.append(face_encoding)
+        # known_face_names.append(user_name)
+        # known_face_encodings.append(face_encoding)
 
-    print(f"Loaded known faces: {user_info_list}")
-    print(f"Known face names: {known_face_names}")
+    # print(f"Loaded known faces: {user_info_list}")
+    # print(f"Known face names: {known_face_names}")
 
-    return user_info_list
+    # return user_info_list
 
-@app.on_event("startup")
-def startup_event():
-    folder_path = UPLOAD_DIRECTORY
-    user_info_list = load_known_faces(folder_path)
-
-
-
-
-
-
+# @app.on_event("startup")
+# def startup_event():
+#     folder_path = UPLOAD_DIRECTORY
+#     user_info_list = load_known_faces(folder_path)
 
 
 @app.get("/detect")
@@ -153,6 +146,22 @@ async def read_root(request: Request):
 async def websocket_handler(websocket: WebSocket):
     await websocket.accept()
     video_capture = cv2.VideoCapture(0)
+
+    db = SessionLocal()
+    all_images = db.query(models.User).all()
+    file_list = [user.user_image for user in all_images]
+    file_names = [user.user_name for user in all_images]
+    print(file_list)
+    print(file_names)
+
+    known_face_encodings = []
+
+    for file_name in file_list:
+        # 이미지 파일을 불러와서 얼굴 인코딩 수행
+        image = face_recognition.load_image_file(file_name)
+        face_encoding = face_recognition.face_encodings(image)[0]
+        # 사용자 이름과 얼굴 인코딩을 각 리스트에 추가
+        known_face_encodings.append(face_encoding)
 
     try:
         while True:
@@ -170,7 +179,7 @@ async def websocket_handler(websocket: WebSocket):
                 min_distance = 0.5  # Set a threshold for face distance
 
                 # Compare face encoding with known faces
-                for known_encoding, known_name in zip(known_face_encodings, known_face_names):
+                for known_encoding, known_name in zip(known_face_encodings, file_names):
                     face_distance = face_recognition.face_distance([known_encoding], face_encoding)[0]
                     if face_distance < min_distance:
                         min_distance = face_distance
@@ -197,4 +206,11 @@ async def websocket_handler(websocket: WebSocket):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket_handler(websocket)
-    
+
+@app.post("/save-image")
+async def add(fileName: str = Form(...), image: UploadFile = File(...)):
+    save_path = os.path.join(UPLOAD_DIRECTORY, f"{fileName}.jpg")  # 이미지의 저장 경로 설정
+    os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)  # 디렉토리가 없는 경우 생성
+    with open(save_path, "wb") as f:
+        f.write(await image.read())
+    return {"filename": fileName}

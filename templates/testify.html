@@ -44,54 +44,67 @@
         </div>
         <div id="controls">
             <button type="button" id="webcamBtn">캡쳐하기</button>
-            <input type="text" id="fileName" placeholder="사용자의 이름을 영문으로 입력하세요">
+            <input type="text" id="fileName" placeholder="username">
             <button type="button" id="saveBtn">저장하기</button>
         </div>
     </div>
 
     <script>
+        const webcamBtn = document.getElementById('webcamBtn');
+        const fileNameInput = document.getElementById('fileName');
+        const saveBtn = document.getElementById('saveBtn');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const video = document.getElementById("video");
+    
+        // Access webcam
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
-                var video = document.getElementById('video');
-                video.srcObject = stream;
-                video.play();
-            });
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('Error accessing webcam:', error);
+                });
         }
-        var canvas = document.getElementById('canvas');
-        var context = canvas.getContext('2d');
-        var video = document.getElementById('video');
-
-        document.getElementById("saveBtn").addEventListener("click", function () {
-            var fileName = document.getElementById('fileName').value.trim();
-            if (fileName === "") {
-                alert("사용자의 이름을 영문으로 입력해주세요.");
-                return;
-            }
-
-            var canvas = document.getElementById('canvas');
-            // 캔버스에 그려진 이미지를 데이터 URL로 변환
-            var imageDataURL = canvas.toDataURL("image/jpg");
-
-            // 새로운 링크 엘리먼트 생성
-            var downloadLink = document.createElement('a');
-
-            // 데이터 URL을 href 속성에 설정
-            downloadLink.href = imageDataURL;
-
-            // 다운로드할 파일의 이름 지정
-            downloadLink.download = fileName + '.jpg';
-
-            // 링크를 문서에 추가하고 클릭 이벤트 실행
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-
-            // 링크를 문서에서 제거
-            document.body.removeChild(downloadLink);
-        });
-
-        document.getElementById("webcamBtn").addEventListener("click", function () {
+    
+        // Capture image from webcam
+        webcamBtn.addEventListener('click', function () {
             context.drawImage(video, 0, 0, 320, 240);
         });
+
+        // Save captured image
+        saveBtn.addEventListener('click', async () => {
+            const fileName = fileNameInput.value.trim();
+            const imageData = canvas.toDataURL('image/jpeg');
+    
+            if (fileName === "" || imageData === "") {
+                alert('이름을 영문으로 입력해주세요');
+                return;
+            }
+    
+            const blob = await fetch(imageData).then(response => response.blob());
+            const formData = new FormData();
+            formData.append('fileName', fileName);
+            formData.append('image', blob, `${fileName}.jpg`);
+    
+            try {
+                const response = await fetch('/save-image', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (response.ok) {
+                    alert('이미지가 성공적으로 저장되었습니다.');
+                } else {
+                    alert('이미지 저장 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('Error saving image:', error);
+                alert('이미지 저장 중 오류 발생')
+            }
+        });
     </script>
+    
+
 </body>
 </html>

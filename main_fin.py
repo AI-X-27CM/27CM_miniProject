@@ -106,39 +106,6 @@ async def verify_image(image: UploadFile = File(...)):
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
-
-
-
-
-# known_face_names = []
-
-# def load_known_faces(folder_path):
-#     user_info_list = []
-#     for file_name in os.listdir(folder_path):
-#         if file_name.endswith(".jpg"):
-#             user_name = os.path.splitext(file_name)[0]
-#             user_info_list.append((user_name, file_name))
-
-#     for user_name, file_name in user_info_list:
-#         image_path = os.path.join(folder_path, file_name)
-#         # 이미지 파일을 불러와서 얼굴 인코딩 수행
-#         image = face_recognition.load_image_file(image_path)
-#         face_encoding = face_recognition.face_encodings(image)[0]
-        # 사용자 이름과 얼굴 인코딩을 각 리스트에 추가
-        # known_face_names.append(user_name)
-        # known_face_encodings.append(face_encoding)
-
-    # print(f"Loaded known faces: {user_info_list}")
-    # print(f"Known face names: {known_face_names}")
-
-    # return user_info_list
-
-# @app.on_event("startup")
-# def startup_event():
-#     folder_path = UPLOAD_DIRECTORY
-#     user_info_list = load_known_faces(folder_path)
-
-
 @app.get("/detect")
 async def read_root(request: Request):
     return templates.TemplateResponse("detect.html", {"request": request})
@@ -151,8 +118,6 @@ async def websocket_handler(websocket: WebSocket):
     all_images = db.query(models.User).all()
     file_list = [user.user_image for user in all_images]
     file_names = [user.user_name for user in all_images]
-    print(file_list)
-    print(file_names)
 
     known_face_encodings = []
 

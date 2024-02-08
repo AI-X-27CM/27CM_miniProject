@@ -27,8 +27,8 @@
         <form enctype="multipart/form-data" class="ui form" action="/add" method="post">
             <div class="field">
                 <label>User list</label>
-                <input type="file" name="image">
-                <input type="text" name="user_name" placeholder="User name">
+                <input type="file" name="image" id="imageInput">
+                <input type="text" name="user_name" id="userName" placeholder="User name">
             </div>
             <button class="ui blue button" type="submit">Add</button>
         </form>
@@ -45,5 +45,15 @@
         </div>
         {% endfor %}
     </div>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', function() {
+            const fullPath = this.value;
+            const fileName = fullPath.split('\\').pop().split('/').pop(); // 파일 경로에서 파일 이름 추출
+            const fileNameWithoutExtension = fileName.split('.').slice(0, -1).join('.'); // 확장자를 제거한 파일 이름
+            const userNameInput = document.getElementById('userName');
+            userNameInput.value = fileNameWithoutExtension; // 파일 이름을 username 입력란에 설정
+        });
+    </script>
 </body>
 </html>

@@ -14,7 +14,6 @@ import models
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
 import os
-import glob ## 추가
 import io
 from fastapi.responses import JSONResponse
 
@@ -72,71 +71,9 @@ def compare_faces(known_face_encodings, face_encoding_to_check, tolerance=0.25):
 
 
 
-@app.get("/testify") ## 추가
+@app.get("/testify")
 async def testify(req: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("testify.html", { "request": req})
-
-# @app.post("/verify_image/") #추가
-# async def verify_image(image: UploadFile = File(...)):
-#     db = SessionLocal()
-#     all_images = db.query(models.User).all()
-#     file_list = [user.user_image for user in all_images]
-
-#     try:
-#         # 클라이언트에서 전송한 이미지의 얼굴 인코딩 계산
-#         image_data = await image.read()
-#         img = face_recognition.load_image_file(io.BytesIO(image_data))
-#         face_encoding_to_check = face_recognition.face_encodings(img)[0]
-
-#         # 데이터베이스 이미지들의 얼굴 인코딩 계산
-#         known_face_encodings = []
-#         for file in file_list:
-#             image_path = file
-#             image = face_recognition.load_image_file(image_path)
-#             face_encoding = face_recognition.face_encodings(image)[0]
-#             known_face_encodings.append(face_encoding)
-
-#         # 얼굴 유사도 비교
-#         results = compare_faces(known_face_encodings, face_encoding_to_check)
-#         if any(results):
-#             return JSONResponse(content={"result": "access"})
-#         else:
-#             return JSONResponse(content={"result": "denied"})
-#     except Exception as e:
-#         return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-
-
-
-
-# known_face_names = []
-
-# def load_known_faces(folder_path):
-#     user_info_list = []
-#     for file_name in os.listdir(folder_path):
-#         if file_name.endswith(".jpg"):
-#             user_name = os.path.splitext(file_name)[0]
-#             user_info_list.append((user_name, file_name))
-
-#     for user_name, file_name in user_info_list:
-#         image_path = os.path.join(folder_path, file_name)
-#         # 이미지 파일을 불러와서 얼굴 인코딩 수행
-#         image = face_recognition.load_image_file(image_path)
-#         face_encoding = face_recognition.face_encodings(image)[0]
-        # 사용자 이름과 얼굴 인코딩을 각 리스트에 추가
-        # known_face_names.append(user_name)
-        # known_face_encodings.append(face_encoding)
-
-    # print(f"Loaded known faces: {user_info_list}")
-    # print(f"Known face names: {known_face_names}")
-
-    # return user_info_list
-
-# @app.on_event("startup")
-# def startup_event():
-#     folder_path = UPLOAD_DIRECTORY
-#     user_info_list = load_known_faces(folder_path)
 
 
 @app.get("/detect")
@@ -146,8 +83,6 @@ async def read_root(request: Request):
 async def websocket_handler(websocket: WebSocket):
     await websocket.accept()
     video_capture = cv2.VideoCapture(0)
-
-#### 추가 코드
 
     db = SessionLocal()
     all_images = db.query(models.User).all()
@@ -162,8 +97,6 @@ async def websocket_handler(websocket: WebSocket):
         face_encoding = face_recognition.face_encodings(image)[0]
         # 사용자 이름과 얼굴 인코딩을 각 리스트에 추가
         known_face_encodings.append(face_encoding)
-
-### 추가 코드
 
     try:
         while True:
